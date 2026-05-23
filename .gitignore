@@ -5,3 +5,6 @@
 *Test.java
 **/test/
 nginx-1.20.2/
+
+# 本地隐私配置
+**/application-local.yml
