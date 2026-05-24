@@ -5,3 +5,6 @@ sky:
     access-key-id: your-access-key-id
     access-key-secret: your-access-key-secret
     bucket-name: your-bucket-name
+  wechat:
+    appid: your-appid
+    secret: your-app-secret

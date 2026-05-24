@@ -1,5 +1,6 @@
 **/target/
-.idea
+.idea/
+.vscode/
 *.iml
 *.class
 *Test.java
@@ -7,3 +8,5 @@
 nginx-1.20.2/
 # 本地隐私配置
 **/application-local.yml
+# AI操作记录
+.deepseek/
