@@ -5,6 +5,7 @@
 *.class
 *Test.java
 **/test/
+# 前端配置
 nginx-1.20.2/
 mp-weixin/
 # 本地隐私配置
