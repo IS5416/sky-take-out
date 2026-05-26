@@ -8,11 +8,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/user/addressBook")
-@Api(tags = "C端地址簿接口")
+@Api(tags = "C端-地址簿接口")
 public class AddressBookController {
 
     @Autowired
