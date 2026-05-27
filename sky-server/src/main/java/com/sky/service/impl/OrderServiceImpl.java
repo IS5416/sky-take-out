@@ -17,7 +17,11 @@ import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.HttpClientUtil;
 import com.sky.utils.WeChatPayUtil;
-import com.sky.vo.*;
+import com.sky.vo.OrderPaymentVO;
+import com.sky.vo.OrderStatisticsVO;
+import com.sky.vo.OrderSubmitVO;
+import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +54,8 @@ public class OrderServiceImpl implements OrderService {
     private UserMapper userMapper;
     @Autowired
     private WeChatPayUtil weChatPayUtil;
+    @Autowired
+    private WebSocketServer webSocketServer;
 
     @Value("${sky.shop.address}")
     private String shopAddress;
@@ -118,6 +124,7 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 检查客户的收货地址是否超出配送范围
+     *
      * @param address
      */
     private void checkOutOfRange(String address) {
@@ -202,22 +209,19 @@ public class OrderServiceImpl implements OrderService {
         if (jsonObject.getString("code") != null && jsonObject.getString("code").equals("ORDERPAID")) {
             throw new OrderBusinessException("该订单已支付");
         }*/
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("code", "ORDERPAID");
-        OrderPaymentVO vo = jsonObject.toJavaObject(OrderPaymentVO.class);
-        vo.setPackageStr(jsonObject.getString("package"));
+        // ========== 绕过微信支付：模拟预支付交易单并直接完成支付 ==========
+        OrderPaymentVO vo = OrderPaymentVO.builder()
+                .nonceStr("mock_nonceStr")
+                .paySign("mock_paySign")
+                .timeStamp(String.valueOf(System.currentTimeMillis() / 1000))
+                .signType("MD5")
+                .packageStr("prepay_id=mock_prepay_id")
+                .build();
 
-        // 替代微信支付成功后的数据库订单状态更新
-        Integer OrderPaidStatus = Orders.PAID;// 支付状态，已支付
-        Integer OrderStatus = Orders.TO_BE_CONFIRMED;// 订单状态，待接单
-
-        // 支付时间更新
-        LocalDateTime checkOutTime = LocalDateTime.now();
-
-        // 获取订单号码
+        // 获取订单号码，通过paySuccess完成：订单状态更新 + WebSocket向管理端推送新订单提醒
         String orderNumber = ordersPaymentDTO.getOrderNumber();
-        log.info("调用updateStatus，替代微信支付成功后的数据库订单状态更新");
-        orderMapper.updateStatus(orderNumber, OrderPaidStatus, OrderStatus, checkOutTime);
+        log.info("绕过微信支付，模拟支付成功，订单号：{}", orderNumber);
+        paySuccess(orderNumber);
 
         return vo;
     }
@@ -241,6 +245,15 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         orderMapper.update(orders);
+
+        // 通过WebSocket向商家管理端(客户端)推送消息
+        Map<String, Object> messageMap = new HashMap();
+        messageMap.put("type", 1); // type：1.支付成功，来电提醒。2.客户催单
+        messageMap.put("orderId", ordersDB.getId());
+        messageMap.put("content", "订单号：" + outTradeNo);
+
+        String message = JSON.toJSONString(messageMap);
+        webSocketServer.sendToAllClient(message);
     }
 
     /**
