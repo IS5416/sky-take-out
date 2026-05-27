@@ -1,11 +1,11 @@
 package com.sky.service;
 
 import com.sky.dto.*;
+import com.sky.result.PageResult;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
-import com.sky.result.PageResult;
 
 public interface OrderService {
     /**
@@ -33,6 +33,7 @@ public interface OrderService {
 
     /**
      * 用户端订单分页查询
+     *
      * @param page
      * @param pageSize
      * @param status
@@ -42,6 +43,7 @@ public interface OrderService {
 
     /**
      * 查询订单详情
+     *
      * @param id
      * @return
      */
@@ -49,6 +51,7 @@ public interface OrderService {
 
     /**
      * 用户取消订单
+     *
      * @param id
      */
     void userCancelById(Long id) throws Exception;
@@ -62,6 +65,7 @@ public interface OrderService {
 
     /**
      * 条件搜索订单
+     *
      * @param ordersPageQueryDTO
      * @return
      */
@@ -69,6 +73,7 @@ public interface OrderService {
 
     /**
      * 各个状态的订单数量统计
+     *
      * @return
      */
     OrderStatisticsVO statistics();
@@ -107,4 +112,11 @@ public interface OrderService {
      * @param id
      */
     void complete(Long id);
+
+    /**
+     * 催单
+     *
+     * @param id
+     */
+    void reminder(Long id);
 }
